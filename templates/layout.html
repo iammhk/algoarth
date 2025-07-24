@@ -12,8 +12,8 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="OpenAlgo is your premier open source algorithmic trading platform, offering a robust and secure environment for developing and executing trading strategies.">
-    <title>{% block title %}OpenAlgo{% endblock %}</title>
+    <meta name="description" content="AlgoArth.AI is your premier open source algorithmic trading platform, offering a robust and secure environment for developing and executing trading strategies.">
+    <title>{% block title %}AlgoArth.AI{% endblock %}</title>
 
     <!-- Favicon and touch icons -->
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}">
@@ -99,8 +99,8 @@
             <div class="menu p-4 w-80 min-h-full bg-base-200">
                 <!-- Sidebar content here -->
                 <div class="flex items-center gap-2 mb-8">
-                    <img src="{{ url_for('static', filename='favicon/logo.png') }}" alt="OpenAlgo" class="h-8 w-8">
-                    <span class="text-xl font-semibold">OpenAlgo</span>
+                    <img id="sidebar-logo" src="{{ url_for('static', filename='favicon/logo.png') }}" alt="AlgoArth.AI" class="h-8 w-8">
+                    <span class="text-xl font-semibold">AlgoArth.AI</span>
                 </div>
                 <div class="flex flex-col gap-2">
                     <a href="/" class="btn btn-ghost justify-start gap-2 {{ 'btn-active' if request.path == '/' }}">
@@ -183,6 +183,24 @@
                 }, 300);
             }, 3000);
         }
+
+        // Logo theme switcher
+        function setLogoForTheme() {
+            const theme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+            const logo = document.getElementById('sidebar-logo');
+            if (!logo) return;
+            if (theme === 'dark') {
+                logo.src = "{{ url_for('static', filename='favicon/logo-dark.png') }}";
+            } else {
+                logo.src = "{{ url_for('static', filename='favicon/logo.png') }}";
+            }
+        }
+        // Initial logo set
+        setLogoForTheme();
+        // Listen for theme changes (if your theme switcher triggers an event, adjust accordingly)
+        window.addEventListener('storage', setLogoForTheme);
+        // Optionally, listen for custom theme change events
+        document.addEventListener('themechange', setLogoForTheme);
     </script>
 </body>
 </html>

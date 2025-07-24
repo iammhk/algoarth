@@ -7,8 +7,8 @@
             </svg>
         </label>
         <a href="/" class="btn btn-ghost normal-case text-xl gap-2">
-            <img src="{{ url_for('static', filename='favicon/logo.png') }}" alt="OpenAlgo" class="h-8 w-8">
-            <span class="hidden sm:inline">OpenAlgo</span>
+            <img id="navbar-logo" src="{{ url_for('static', filename='favicon/logo.png') }}" alt="AlgoArth.AI" class="h-8 w-8">
+            <span class="hidden sm:inline">AlgoArth.AI</span>
         </a>
     </div>
 
@@ -198,3 +198,20 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Logo theme switcher for navbar
+    function setNavbarLogoForTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+        const logo = document.getElementById('navbar-logo');
+        if (!logo) return;
+        if (theme === 'dark') {
+            logo.src = "{{ url_for('static', filename='favicon/logo-dark.png') }}";
+        } else {
+            logo.src = "{{ url_for('static', filename='favicon/logo.png') }}";
+        }
+    }
+    setNavbarLogoForTheme();
+    window.addEventListener('storage', setNavbarLogoForTheme);
+    document.addEventListener('themechange', setNavbarLogoForTheme);
+</script>
