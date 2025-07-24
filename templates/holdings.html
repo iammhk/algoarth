@@ -7,6 +7,18 @@
         <h1 class="text-2xl font-semibold text-base-content">Investor Summary</h1>
     </div>
 
+    <!-- Asset Allocation Pie Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+        <div class="bg-base-100 shadow-lg rounded-lg p-6 flex flex-col items-center">
+            <h2 class="text-lg font-semibold mb-4">Stock Allocation</h2>
+            <canvas id="stockPieChart" width="50" height="50"></canvas>
+        </div>
+        <div class="bg-base-100 shadow-lg rounded-lg p-6 flex flex-col items-center">
+            <h2 class="text-lg font-semibold mb-4">Sector Allocation</h2>
+            <canvas id="sectorPieChart" width="50" height="50"></canvas>
+        </div>
+    </div>
+
     <!-- Holdings Summary Dashboard Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Holding Value Card -->
@@ -61,6 +73,7 @@
                             <th>Exchange</th>
                             <th>Quantity</th>
                             <th>Product</th>
+                            <th>Last Price</th>
                             <th>Profit and Loss</th>
                             <th>PnL Percentage</th>
                         </tr>
@@ -78,6 +91,7 @@
                             <td>
                                 <div class="badge badge-ghost">{{ holding.product }}</div>
                             </td>
+                            <td>{% if holding.last_price is defined %}{{ holding.last_price }}{% elif holding.ltp is defined %}{{ holding.ltp }}{% else %}N/A{% endif %}</td>
                             <td class="{% if holding.pnl > 0 %}text-success{% elif holding.pnl < 0 %}text-error{% endif %}">
                                 {{ holding.pnl }}
                             </td>
@@ -92,4 +106,91 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
+<!-- Embed backend data as JSON in script tags to avoid JS/Jinja escaping issues -->
+<script type="application/json" id="stockLabelsData">{{ stock_labels | safe }}</script>
+<script type="application/json" id="stockDataData">{{ stock_data | safe }}</script>
+<script type="application/json" id="sectorLabelsData">{{ sector_labels | safe }}</script>
+<script type="application/json" id="sectorDataData">{{ sector_data | safe }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse backend data from script tags
+    var stockLabels = [];
+    var stockData = [];
+    try {
+        stockLabels = JSON.parse(document.getElementById('stockLabelsData').textContent);
+        stockData = JSON.parse(document.getElementById('stockDataData').textContent);
+    } catch (e) {
+        console.error('Error parsing stock allocation data:', e);
+    }
+    // Debug: log to check data
+    console.log('Stock Labels:', stockLabels);
+    console.log('Stock Data:', stockData);
+    if (Array.isArray(stockLabels) && stockLabels.length && Array.isArray(stockData) && stockData.length) {
+        var ctx = document.getElementById('stockPieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut', // Changed from 'pie' to 'doughnut' for ring chart
+            data: {
+                labels: stockLabels,
+                datasets: [{
+                    data: stockData,
+                    backgroundColor: [
+                        '#6366f1', '#f59e42', '#10b981', '#ef4444', '#fbbf24', '#3b82f6', '#a78bfa', '#f472b6', '#34d399', '#f87171', '#60a5fa', '#facc15', '#4ade80', '#f472b6', '#818cf8'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '60%', // Controls the thickness of the ring
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    } else {
+        console.warn('No stock allocation data to display.');
+    }
+
+    // Sector-wise allocation (now enabled)
+    var sectorLabels = [];
+    var sectorData = [];
+    try {
+        sectorLabels = JSON.parse(document.getElementById('sectorLabelsData').textContent);
+        sectorData = JSON.parse(document.getElementById('sectorDataData').textContent);
+    } catch (e) {
+        console.error('Error parsing sector allocation data:', e);
+    }
+    // Debug: log to check data
+    console.log('Sector Labels:', sectorLabels);
+    console.log('Sector Data:', sectorData);
+    if (Array.isArray(sectorLabels) && sectorLabels.length && Array.isArray(sectorData) && sectorData.length) {
+        var ctx2 = document.getElementById('sectorPieChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: sectorLabels,
+                datasets: [{
+                    data: sectorData,
+                    backgroundColor: [
+                        '#3b82f6', '#f59e42', '#10b981', '#fbbf24', '#ef4444', '#6366f1', '#a78bfa', '#f472b6', '#34d399', '#f87171', '#60a5fa', '#facc15', '#4ade80', '#f472b6', '#818cf8'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    } else {
+        console.warn('No sector allocation data to display.');
+    }
+});
+</script>
 {% endblock %}

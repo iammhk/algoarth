@@ -93,11 +93,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const newMode = e.target.checked ? 1 : 0;
         const newModeBoolean = Boolean(newMode);
-        
         // Optimistically update UI
         updateBadge(newModeBoolean);
-        
-        fetch(`/settings/analyze-mode/${newMode}`, {
+        // Always send 0 or 1 as integer in the URL
+        fetch(`/settings/analyze-mode/${newMode ? 1 : 0}`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken()
@@ -109,7 +108,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Ensure UI matches server response
                 updateBadge(Boolean(data.analyze_mode));
                 showToast(data.message, 'success');
-                
                 // Reload page to ensure all components update
                 setTimeout(() => window.location.reload(), 1000);
             } else {
@@ -119,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('[Mode] Error updating mode:', error);
             showToast('Failed to update mode', 'error');
-            
             // Revert to previous state on error
             updateBadge(!newModeBoolean);
         });

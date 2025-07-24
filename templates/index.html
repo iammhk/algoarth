@@ -1,11 +1,12 @@
 {% extends "layout.html" %}
 
-{% block title %}AlgoArth.AI - OpenSource Algo Platform for Everyone{% endblock %}
+{% block title %}AlgoArth.ai - OpenSource Algo Platform for Everyone{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <div class="min-h-[calc(100vh-4rem)] flex items-center justify-center">
     <div class="text-center max-w-3xl mx-auto">
+        <img id="index-hero-logo" src="{{ url_for('static', filename='favicon/logo.png') }}" alt="AlgoArth.ai Logo" class="mx-auto mb-6 h-20 w-20">
         <h1 class="text-5xl font-bold mb-8">
             Your Personal
             <span class="text-primary">Algo Trading</span>
@@ -30,4 +31,20 @@
         </div>
     </div>
 </div>
+<script>
+    // Logo theme switcher for index hero
+    function setIndexHeroLogoForTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+        const logo = document.getElementById('index-hero-logo');
+        if (!logo) return;
+        if (theme === 'dark') {
+            logo.src = "{{ url_for('static', filename='favicon/logo-dark.png') }}";
+        } else {
+            logo.src = "{{ url_for('static', filename='favicon/logo.png') }}";
+        }
+    }
+    setIndexHeroLogoForTheme();
+    window.addEventListener('storage', setIndexHeroLogoForTheme);
+    document.addEventListener('themechange', setIndexHeroLogoForTheme);
+</script>
 {% endblock %}

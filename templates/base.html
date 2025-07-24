@@ -12,9 +12,8 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AlgoArth.AI is your premier open source algorithmic trading platform, offering a robust and secure environment for developing and executing trading strategies.">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>AlgoArth.AI</title>
+    <meta name="description" content="AlgoArth.ai is your premier open source algorithmic trading platform, offering a robust and secure environment for developing and executing trading strategies.">
+    <title>AlgoArth.ai</title>
 
     <!-- Favicon and touch icons -->
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}">
@@ -61,6 +60,9 @@
     <!-- Other Custom Scripts -->
     <script src="{{ url_for('static', filename='js/socket-events.js') }}"></script>
     <script src="{{ url_for('static', filename='js/mobile-menu.js') }}"></script>
+
+    <!-- CSRF Meta Tag for AJAX -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {% block head %}{% endblock %}
 </head>
@@ -124,8 +126,8 @@
             <div class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
                 <!-- Sidebar content here -->
                 <div class="flex items-center gap-2 mb-8">
-                    <img src="{{ url_for('static', filename='favicon/logo.png') }}" alt="AlgoArth.AI" class="h-8 w-8">
-                    <span class="text-xl font-semibold">AlgoArth.AI</span>
+                    <img id="sidebar-logo" src="{{ url_for('static', filename='favicon/logo.png') }}" alt="AlgoArth.ai" class="h-8 w-8">
+                    <span class="text-xl font-semibold">AlgoArth.ai</span>
                 </div>
                 <ul class="menu menu-lg gap-2">
                     <li>
@@ -228,6 +230,21 @@
 
     <!-- Master Contract Status Script for Navbar -->
     <script>
+        // Sidebar logo theme switcher
+        function setSidebarLogoForTheme() {
+            const theme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+            const logo = document.getElementById('sidebar-logo');
+            if (!logo) return;
+            if (theme === 'dark') {
+                logo.src = "{{ url_for('static', filename='favicon/logo-dark.png') }}";
+            } else {
+                logo.src = "{{ url_for('static', filename='favicon/logo.png') }}";
+            }
+        }
+        setSidebarLogoForTheme();
+        window.addEventListener('storage', setSidebarLogoForTheme);
+        document.addEventListener('themechange', setSidebarLogoForTheme);
+
         // Navbar Master Contract Status Controller
         class NavbarMasterContractStatus {
             constructor() {
@@ -370,5 +387,6 @@
             }, 3000);
         }
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

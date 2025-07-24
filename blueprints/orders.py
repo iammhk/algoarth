@@ -7,6 +7,8 @@ from services.close_position_service import close_position
 from utils.logging import get_logger
 import csv
 import io
+import os
+import json
 
 logger = get_logger(__name__)
 
@@ -262,6 +264,21 @@ def holdings():
     holdings_data = get_holdings(auth_token)
     logger.debug(f"Holdings data received: {holdings_data}")
 
+    # --- Ensure log_dir and holdings_log_path are defined before use ---
+    log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'log')
+    os.makedirs(log_dir, exist_ok=True)
+    holdings_log_path = os.path.join(log_dir, 'holdings_data.txt')
+    # Patch: ensure last_price is present in the raw data before saving
+    if isinstance(holdings_data, list):
+        for h in holdings_data:
+            if 'last_price' not in h and 'ltp' in h:
+                h['last_price'] = h['ltp']
+    try:
+        with open(holdings_log_path, 'w', encoding='utf-8') as f:
+            json.dump(holdings_data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save holdings data to {holdings_log_path}: {e}")
+
     if 'status' in holdings_data and holdings_data['status'] == 'error':
         logger.error("Error in holdings data response")
         return redirect(url_for('auth.logout'))
@@ -274,8 +291,82 @@ def holdings():
     holdings_data = map_portfolio_data(holdings_data)
     portfolio_stats = calculate_portfolio_statistics(holdings_data)
     holdings_data = transform_holdings_data(holdings_data)
-    
-    return render_template('holdings.html', holdings_data=holdings_data, portfolio_stats=portfolio_stats)
+
+    # --- Ensure 'last_price' from get_holdings is preserved for table display ---
+    # Read the original holdings data from file only if the file exists
+    original_holdings_data = None
+    if os.path.exists(holdings_log_path):
+        try:
+            with open(holdings_log_path, 'r', encoding='utf-8') as f:
+                original_holdings_data = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to read original holdings data for last_price patch: {e}")
+
+    if original_holdings_data and isinstance(original_holdings_data, list):
+        # Build a lookup for last_price by ISIN, then by (symbol, exchange)
+        last_price_lookup_isin = {}
+        last_price_lookup_symex = {}
+        for h in original_holdings_data:
+            isin = h.get('isin')
+            key = (h.get('symbol'), h.get('exchange'))
+            if isin:
+                last_price_lookup_isin[isin] = h.get('last_price')
+            last_price_lookup_symex[key] = h.get('last_price')
+        for h in holdings_data:
+            # Try ISIN first
+            isin = h.get('isin')
+            key = (h.get('symbol'), h.get('exchange'))
+            if isin and isin in last_price_lookup_isin:
+                h['last_price'] = last_price_lookup_isin[isin]
+            elif key in last_price_lookup_symex:
+                h['last_price'] = last_price_lookup_symex[key]
+            else:
+                # As a last resort, try to match by symbol only
+                sym = h.get('symbol')
+                for orig in original_holdings_data:
+                    if orig.get('symbol') == sym and 'last_price' in orig:
+                        h['last_price'] = orig['last_price']
+                        break
+
+    # --- Asset allocation for charts ---
+    from collections import defaultdict
+    # Stock-wise allocation
+    stock_labels = [h['symbol'] for h in holdings_data]
+    # Always use last_price * quantity for stock_data
+    stock_data = [h.get('last_price', 0) * h.get('quantity', 0) for h in holdings_data]
+    # Sector-wise allocation (leave as-is for now)
+    sector_map = defaultdict(float)
+    for h in holdings_data:
+        sector = h.get('sector') or 'Unknown'
+        sector_map[sector] += h.get('last_price', 0) * h.get('quantity', 0)
+    sector_labels = list(sector_map.keys())
+    sector_data = list(sector_map.values())
+
+    # --- Save processed holdings_data (after mapping and transformation) to log/holdings_data_processed.txt ---
+    processed_log_path = os.path.join(log_dir, 'holdings_data_processed.txt')
+    try:
+        with open(processed_log_path, 'w', encoding='utf-8') as f:
+            json.dump(holdings_data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save processed holdings data to {processed_log_path}: {e}")
+
+    # --- Save holdings_data after transformation to log/holdings_data_after_transform.txt ---
+    after_transform_log_path = os.path.join(log_dir, 'holdings_data_after_transform.txt')
+    try:
+        with open(after_transform_log_path, 'w', encoding='utf-8') as f:
+            json.dump(holdings_data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save holdings data after transformation to {after_transform_log_path}: {e}")
+
+    return render_template(
+        'holdings.html',
+        holdings_data=holdings_data,
+        portfolio_stats=portfolio_stats,
+        stock_labels=json.dumps(stock_labels),
+        stock_data=json.dumps(stock_data),
+        sector_labels=json.dumps(sector_labels),
+        sector_data=json.dumps(sector_data),
+    )
 
 @orders_bp.route('/orderbook/export')
 @check_session_validity
@@ -291,7 +382,7 @@ def export_orderbook():
 
         if not api_funcs or not mapping_funcs:
             logger.error(f"Error loading broker-specific modules for {broker}")
-            return "Error loading broker-specific modules", 500
+            return "Error loading broker_specific modules", 500
 
         login_username = session['user']
         auth_token = get_auth_token(login_username)
@@ -332,7 +423,7 @@ def export_tradebook():
 
         if not api_funcs or not mapping_funcs:
             logger.error(f"Error loading broker-specific modules for {broker}")
-            return "Error loading broker-specific modules", 500
+            return "Error loading broker_specific modules", 500
 
         login_username = session['user']
         auth_token = get_auth_token(login_username)
@@ -375,7 +466,7 @@ def export_positions():
 
         if not api_funcs or not mapping_funcs:
             logger.error(f"Error loading broker-specific modules for {broker}")
-            return "Error loading broker-specific modules", 500
+            return "Error loading broker_specific modules", 500
 
         login_username = session['user']
         auth_token = get_auth_token(login_username)

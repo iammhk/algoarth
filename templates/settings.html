@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+    <h1 class="text-2xl font-bold mb-6">User Settings</h1>
+    <form id="settings-form" method="post" action="/settings/update">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Risk Appetite</label>
+            <select name="risk_appetite" class="input input-bordered w-full">
+                <option value="low" {% if settings and settings.risk_appetite == 'low' %}selected{% endif %}>Low</option>
+                <option value="medium" {% if settings and settings.risk_appetite == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="high" {% if settings and settings.risk_appetite == 'high' %}selected{% endif %}>High</option>
+            </select>
+        </div>
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Zerodha Kite API Key</label>
+            <input type="text" name="zerodha_api_key" class="input input-bordered w-full" value="{{ settings.zerodha_api_key if settings else '' }}" required>
+        </div>
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Zerodha Kite API Secret</label>
+            <input type="password" name="zerodha_api_secret" class="input input-bordered w-full" value="{{ settings.zerodha_api_secret if settings else '' }}" required>
+        </div>
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Short Term Goal</label>
+            <input type="text" name="goal_short" class="input input-bordered w-full" value="{{ settings.goal_short if settings else '' }}">
+        </div>
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Medium Term Goal</label>
+            <input type="text" name="goal_medium" class="input input-bordered w-full" value="{{ settings.goal_medium if settings else '' }}">
+        </div>
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Long Term Goal</label>
+            <input type="text" name="goal_long" class="input input-bordered w-full" value="{{ settings.goal_long if settings else '' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+    </form>
+</div>
+{% endblock %}

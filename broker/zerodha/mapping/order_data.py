@@ -211,6 +211,9 @@ def transform_holdings_data(holdings_data):
             "exchange": holdings.get('exchange', ''),
             "quantity": holdings.get('quantity', 0),
             "product": holdings.get('product', ''),
+            "close_price": holdings.get('close_price', ''),
+            "average_price": holdings.get('average_price', ''),
+            "last_price": holdings.get('last_price', 0.0),  # Default to 0.0 if not present
             "pnl": round(holdings.get('pnl', 0.0), 2),  # Rounded to two decimals
             "pnlpercent": round((holdings.get('last_price', 0) - holdings.get('average_price', 0.0)) / holdings.get('average_price', 0.0) * 100, 2)  # Rounded to two decimals
         

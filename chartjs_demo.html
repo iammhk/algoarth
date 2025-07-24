@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart.js Demo Pie Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f3f4f6; }
+        #chart-container { background: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 2px 8px #0001; }
+    </style>
+</head>
+<body>
+    <div id="chart-container">
+        <h2>Stock Allocation (Demo)</h2>
+        <canvas id="stockPieChart" width="400" height="400"></canvas>
+    </div>
+    <script>
+        var stockLabels = ["TCS", "INFY", "HDFCBANK", "RELIANCE", "ITC"];
+        var stockData = [25, 20, 15, 30, 10];
+        new Chart(document.getElementById('stockPieChart'), {
+            type: 'pie',
+            data: {
+                labels: stockLabels,
+                datasets: [{
+                    data: stockData,
+                    backgroundColor: [
+                        '#6366f1', '#f59e42', '#10b981', '#ef4444', '#fbbf24'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
